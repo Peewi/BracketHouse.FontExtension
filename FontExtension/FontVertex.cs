@@ -22,14 +22,7 @@ namespace FontExtension
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				var hashCode = Position.GetHashCode();
-				hashCode = (hashCode * 397) ^ Color.GetHashCode();
-				hashCode = (hashCode * 397) ^ StrokeColor.GetHashCode();
-				hashCode = (hashCode * 397) ^ TextureCoordinate.GetHashCode();
-				return hashCode;
-			}
+			return HashCode.Combine(Position, Color, StrokeColor, TextureCoordinate);
 		}
 
 		public static bool operator ==(FontVertex left, FontVertex right)
