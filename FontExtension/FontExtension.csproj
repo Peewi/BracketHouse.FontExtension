@@ -4,6 +4,8 @@
 		<ApplicationIcon />
 		<OutputType>Library</OutputType>
 		<StartupObject />
+		<VersionPrefix>1.1.0</VersionPrefix>
+		<Version>$(VersionPrefix)</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
