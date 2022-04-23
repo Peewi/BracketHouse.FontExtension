@@ -164,7 +164,7 @@ namespace FontExtension
         /// <param name="text">String to measure.</param>
         /// <param name="lineHeight">Lineheight to use instead of the lineheight of the font.</param>
         /// <param name="kerning">Whether to use kerning.</param>
-        /// <param name="formatting">Whether to check for formatting tags and skip measuring them.</param>
+        /// <param name="formatting">Whether to check for formatting tags and skip measuring them. Does not considers scale.</param>
         /// <returns>Width and height of the string if drawn with scale 1.0.</returns>
         public Vector2 MeasureString(string text, float lineHeight, bool kerning, bool formatting = false)
 		{
@@ -204,7 +204,7 @@ namespace FontExtension
         /// Measure how large a string is, with kerning enabled and using the font's lineheight.
         /// </summary>
         /// <param name="text">String to measure.</param>
-        /// <param name="formatting">Whether to check for formatting tags and skip measuring them.</param>
+        /// <param name="formatting">Whether to check for formatting tags and skip measuring them. Does not considers scale.</param>
         /// <returns>Width and height of the string if drawn with scale 1.0.</returns>
         public Vector2 MeasureString(string text, bool formatting = false)
 		{
@@ -215,7 +215,7 @@ namespace FontExtension
         /// </summary>
         /// <param name="text">String to measure.</param>
         /// <param name="kerning">Whether to use kerning.</param>
-        /// <param name="formatting">Whether to check for formatting tags and skip measuring them.</param>
+        /// <param name="formatting">Whether to check for formatting tags and skip measuring them. Does not considers scale.</param>
         /// <returns>Width and height of the string if drawn with scale 1.0.</returns>
         public Vector2 MeasureString(string text, bool kerning, bool formatting = false)
         {
