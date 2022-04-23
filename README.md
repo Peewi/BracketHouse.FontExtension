@@ -14,6 +14,35 @@ The game project contains a simple utility class and shader to draw 3D moving te
 # Using this in your own project
 For an example and more information of how to use this in your own project, see [my other repo](https://github.com/Peewi/MonoMSDF-Example).
 
+# Formatting
+https://user-images.githubusercontent.com/57567487/164911304-70409d4a-528b-438b-873b-dce05eb81a36.mp4
+
+Formatting is supported through the use of tags. There are no closing tags. Each tag changes the formatting from that point forward, overriding any previous tag of the same type. All tags and arguments are case insensitive.
+
+As of writing, the available tags are:
+* `[color <color>]`, alias `[fill <color>]`. Type: `FillColor`. Sets the fill color of the text. Additionally a color on its own works as this tag. The accepted formats for colors are hex colors in `#RRGGBB` or `#RRGGBBAA`, values 0-255 in the formats `R G B` or `R G B A`, and color names. When a color name is used or alpha is omitted, the alpha of the fill color passed to `TextRenderer.LayoutText` is used. Examples: `[#ff0000]`, `[fill 0 128 0 128]`, `[blue]`.
+* `[stroke <color>]`. Type: `StrokeColor`. Sets the stroke color of the text. Accepts same color formats as `color`. Example: `[stroke white]`.
+* `[offset <x> <y>]`. Type: `PositionOffset`. Offsets the text by this amount, multiplied by the current scale. Takes two numbers to use as x and y values or a single number to use for both x and y. Examples: `[offset 3 4]`, `[offset 2.5]`.
+* `[scale <number>]`. Type: `Scale`. Scales the text. Multiplies the value that was passed to `TextRenderer.LayoutText`. Examples: `[scale 4]`, `[scale 1.5]` Note: Mixing multiple scales in one piece of text works, but is unlikely to result in a good looking layout.
+* `[lineheight <number>]`. Type: `LineHeight`. Changes the line height of the text. Multiplies the value of the font or that was passed to `TextRenderer.LayoutText`. Example `[lineheight 1.6]`
+* `[sine]`. Type: `LetterPositionOffset`. Animates the letters in a sine wave. Example `[sine]`.
+* `[rainbowfill]`, alias `[rainbow]`. Type: `FillColor`. Animates the fill color of the text. Example: `[rainbow]`.
+* `[rainbowstroke]`  Type: `StrokeColor`. Like `[rainbowfill]`, but for the stroke color. Example: `[rainbowstroke]`.
+* `[end <tagtypes>]`. Resets formatting to the default/what was passed to `TextRenderer.LayoutText`. Accepts any number of tag types at the same time. Examples: `[end color]`, `[end scale letterposition color]`
+
+The types of tag are:
+* `FillColor`, aliases: `Fill` and `Color`.
+* `StrokeColor`, alias: `Stroke`.
+* `PositionOffset`, aliases: `Offset` and `Position`.
+* `LetterPositionOffset`, aliases: `LetterPosition` and `LetterOffset`. Methods associated with `LetterPositionOffset` tags are executed for every letter in the layouted text, while methods for other tags are only executed once during text layouting.
+* `Scale`
+* `LineHeight`
+* `Kerning`
+* `Special`. Special tags do not have any direct effect on the text formatting, but can be used to run arbitrary code when layouting text. There are currently no special tags.
+
+Adding your own tags is easy. Simply create a method that matches one of the delegates in `Formatting` and call `Formatting.RegisterTag`. Example: `RegisterTag("color", fillFunction: FormattingFunctions.ColorFunction)`. Note that some of the delegates have identical signatures, so you may be required to explicitly provide the paremeter name.
+
+
 # Parameters
 The field font processor has two parameters that influence the generation of the font atlas.
 ## Resolution
