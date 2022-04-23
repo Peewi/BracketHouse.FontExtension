@@ -22,6 +22,7 @@ namespace FontExtension
 			Offset = PositionOffset,
 			Position = PositionOffset,
 			PositionOffset = 4,
+			LetterOffset = LetterPositionOffset,
 			LetterPosition = LetterPositionOffset,
 			LetterPositionOffset = 16,
 			Scale = 32,
