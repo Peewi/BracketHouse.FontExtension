@@ -26,6 +26,7 @@ As of writing, the available tags are:
 * `[scale <number>]`. Type: `Scale`. Scales the text. Multiplies the value that was passed to `TextRenderer.LayoutText`. Examples: `[scale 4]`, `[scale 1.5]` Note: Mixing multiple scales in one piece of text works, but is unlikely to result in a good looking layout.
 * `[lineheight <number>]`. Type: `LineHeight`. Changes the line height of the text. Multiplies the value of the font or that was passed to `TextRenderer.LayoutText`. Example `[lineheight 1.6]`
 * `[sine]`. Type: `LetterPositionOffset`. Animates the letters in a sine wave. Example `[sine]`.
+* `[shake]`. Type: `LetterPositionOffset`. Animates the letters to shake erratically. Example `[shake]`.
 * `[rainbowfill]`, alias `[rainbow]`. Type: `FillColor`. Animates the fill color of the text. Example: `[rainbow]`.
 * `[rainbowstroke]`  Type: `StrokeColor`. Like `[rainbowfill]`, but for the stroke color. Example: `[rainbowstroke]`.
 * `[end <tagtypes>]`. Resets formatting to the default/what was passed to `TextRenderer.LayoutText`. Accepts any number of tag types at the same time. Examples: `[end color]`, `[end scale letterposition color]`

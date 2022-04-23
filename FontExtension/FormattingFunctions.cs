@@ -309,6 +309,21 @@ namespace FontExtension
 			return new Vector2(0, val);
 		}
 		/// <summary>
+		/// Make letters in text shake erratically.
+		/// </summary>
+		/// <param name="gameTime">Used for animation</param>
+		/// <param name="charNum">Unused</param>
+		/// <param name="position">Used to make text not all move together</param>
+		/// <param name="currentChar">Unused</param>
+		/// <param name="args">Unused</param>
+		/// <returns>A <c>Vector2</c> to be added to letter position.</returns>
+		internal static Vector2 Shake(GameTime gameTime, int charNum, Vector2 position, char currentChar, string[] args)
+		{
+			float counter = (float)gameTime.TotalGameTime.TotalSeconds + position.X + position.Y;
+			counter *= 30;
+			return new Vector2(MathF.Sin(counter), MathF.Cos(counter * 1.3f)) / 40f;
+		}
+		/// <summary>
 		/// A pulsing color, based on gametime.
 		/// </summary>
 		/// <param name="gameTime">Used to determine color.</param>

@@ -127,6 +127,7 @@ namespace FontExtension
 			RegisterTag("lineheight", lineHeightFunction: FormattingFunctions.ParseFloat);
 			RegisterTag("kerning", kerningFunction: FormattingFunctions.ParseBool);
 			RegisterTag("sine", letterPositionFunction: FormattingFunctions.Sine);
+			RegisterTag("shake", letterPositionFunction: FormattingFunctions.Shake);
 			RegisterTag("rainbow", fillFunction: FormattingFunctions.Rainbow);
 			RegisterTag("rainbowfill", fillFunction: FormattingFunctions.Rainbow);
 			RegisterTag("rainbowstroke", strokeFunction: FormattingFunctions.Rainbow);
