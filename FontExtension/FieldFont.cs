@@ -164,29 +164,39 @@ namespace FontExtension
         /// <param name="text">String to measure.</param>
         /// <param name="lineHeight">Lineheight to use instead of the lineheight of the font.</param>
         /// <param name="kerning">Whether to use kerning.</param>
+        /// <param name="formatting">Whether to check for formatting tags and skip measuring them.</param>
         /// <returns>Width and height of the string if drawn with scale 1.0.</returns>
-        public Vector2 MeasureString(string text, float lineHeight, bool kerning)
+        public Vector2 MeasureString(string text, float lineHeight, bool kerning, bool formatting = false)
 		{
             float currentLine = 0;
             Vector2 measure = Vector2.Zero;
             measure.Y = lineHeight;
             for (int i = 0; i < text.Length; i++)
 			{
-                FieldGlyph current = GetGlyph(text[i]);
-                currentLine += current.Advance;
-                if (kerning && i < text.Length - 1)
-                {
-                    if (Kerning.TryGetValue((text[i], text[i + 1]), out float kern))
-                    {
-                        currentLine += kern;
-                    }
-                }
-                measure.X = MathF.Max(measure.X, currentLine);
-                if (text[i] == '\n')
-                {
-                    currentLine = 0;
-                    measure.Y += lineHeight;
-                }
+                bool skipLetter = false;
+				if (formatting && text[i] == '[')
+				{
+                    var (tagDelegate, tagType, tagArgs, tagStringLength) = Formatting.FindTag(text, i);
+                    i += tagStringLength;
+				}
+				if (!skipLetter)
+				{
+					FieldGlyph current = GetGlyph(text[i]);
+					currentLine += current.Advance;
+					if (kerning && i < text.Length - 1)
+					{
+						if (Kerning.TryGetValue((text[i], text[i + 1]), out float kern))
+						{
+							currentLine += kern;
+						}
+					}
+					measure.X = MathF.Max(measure.X, currentLine);
+					if (text[i] == '\n')
+					{
+						currentLine = 0;
+						measure.Y += lineHeight;
+					} 
+				}
             }
             return measure;
 		}
@@ -194,20 +204,22 @@ namespace FontExtension
         /// Measure how large a string is, with kerning enabled and using the font's lineheight.
         /// </summary>
         /// <param name="text">String to measure.</param>
+        /// <param name="formatting">Whether to check for formatting tags and skip measuring them.</param>
         /// <returns>Width and height of the string if drawn with scale 1.0.</returns>
-        public Vector2 MeasureString(string text)
+        public Vector2 MeasureString(string text, bool formatting = false)
 		{
-            return MeasureString(text, LineHeight, true);
+            return MeasureString(text, LineHeight, true, formatting);
         }
         /// <summary>
         /// Measure how large a string is, using the font's lineheight.
         /// </summary>
         /// <param name="text">String to measure.</param>
         /// <param name="kerning">Whether to use kerning.</param>
+        /// <param name="formatting">Whether to check for formatting tags and skip measuring them.</param>
         /// <returns>Width and height of the string if drawn with scale 1.0.</returns>
-        public Vector2 MeasureString(string text, bool kerning)
+        public Vector2 MeasureString(string text, bool kerning, bool formatting = false)
         {
-            return MeasureString(text, LineHeight, kerning);
+            return MeasureString(text, LineHeight, kerning, formatting);
         }
     }
 }

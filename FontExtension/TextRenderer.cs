@@ -100,7 +100,8 @@ namespace FontExtension
 		/// <param name="positionByBaseline">Override <c>PositionByBaseline</c> property.</param>
 		/// <param name="rotation">Amount of rotation in radians</param>
 		/// <param name="origin">Point to rotate around, relative to position</param>
-		void LayoutText(string text, Vector2 position, float depth, float lineHeight, float scale, Color color, Color strokeColor, bool kerning, bool yIsDown, bool positionByBaseline, float rotation, Vector2 origin)
+		/// <param name="formatting">Whether to parse and apply formatting tags</param>
+		void LayoutText(string text, Vector2 position, float depth, float lineHeight, float scale, Color color, Color strokeColor, bool kerning, bool yIsDown, bool positionByBaseline, float rotation, Vector2 origin, bool formatting, GameTime gameTime)
 		{
 			if (string.IsNullOrEmpty(text))
 			{
@@ -114,6 +115,15 @@ namespace FontExtension
 
 			Vector2 advanceDir = new Vector2(MathF.Cos(rotation), MathF.Sin(rotation));
 			Vector2 upDir = yFlip * new Vector2(advanceDir.Y, -advanceDir.X);
+
+			Color currentFill = color;
+			Color currentStroke = strokeColor;
+			float currentLineHeight = lineHeight;
+			float currentScale = scale;
+			Vector2 currentOffset = Vector2.Zero;
+			bool currentKerning = kerning;
+			Formatting.LetterPositionDelegate currentLetterDelegate = null;
+			string[] currentLetterArgs = null;
 
 			Vector2 cursorStart = position;
 			// Rotation math: https://matthew-brett.github.io/teaching/rotation_2d.html
@@ -132,18 +142,97 @@ namespace FontExtension
 			for (var i = 0; i < text.Length; i++)
 			{
 				FieldGlyph current = Font.GetGlyph(text[i]);
-
-				if (!char.IsWhiteSpace(text[i]))
+				bool skipLetter = char.IsWhiteSpace(text[i]);
+				bool skipAdvance = false;
+				if (formatting && text[i] == '[')
 				{
-					Vector2 rotLeft = advanceDir * current.PlaneLeft * scale;
-					Vector2 rotRight = advanceDir * current.PlaneRight * scale;
-					Vector2 rotTop = upDir * current.PlaneTop * scale;
-					Vector2 rotBottom = upDir * current.PlaneBottom * scale;
+					var (returnValue, tagType, args, tagStringLength) = Formatting.FindAndExecuteTag(text, i, gameTime, color, strokeColor);
+					if (tagType != Formatting.TagType.Unknown)
+					{
+						skipLetter = true;
+						skipAdvance = true;
+						i += tagStringLength;
+					}
+					switch (tagType)
+					{
+						case Formatting.TagType.Unknown:
+							break;
+						case Formatting.TagType.FillColor:
+							currentFill = (Color)returnValue;
+							break;
+						case Formatting.TagType.StrokeColor:
+							currentStroke = (Color)returnValue;
+							break;
+						case Formatting.TagType.PositionOffset:
+							currentOffset = (Vector2)returnValue;
+							break;
+						case Formatting.TagType.LetterPositionOffset:
+							currentLetterDelegate = (Formatting.LetterPositionDelegate)returnValue;
+							currentLetterArgs = args;
+							break;
+						case Formatting.TagType.Scale:
+							currentScale = (float)returnValue * scale;
+							break;
+						case Formatting.TagType.LineHeight:
+							currentLineHeight = (float)returnValue * lineHeight;
+							break;
+						case Formatting.TagType.Kerning:
+							currentKerning = (bool)returnValue;
+							break;
+						case Formatting.TagType.Special:
+							break;
+						case Formatting.TagType.EndFormat:
+							Formatting.TagType Ends = (Formatting.TagType)returnValue;
+							if (Ends.HasFlag(Formatting.TagType.FillColor))
+							{
+								currentFill = color;
+							}
+							if (Ends.HasFlag(Formatting.TagType.StrokeColor))
+							{
+								currentStroke = strokeColor;
+							}
+							if (Ends.HasFlag(Formatting.TagType.PositionOffset))
+							{
+								currentOffset = Vector2.Zero;
+							}
+							if (Ends.HasFlag(Formatting.TagType.LetterPositionOffset))
+							{
+								currentLetterDelegate = null;
+								currentLetterArgs = null;
+							}
+							if (Ends.HasFlag(Formatting.TagType.Scale))
+							{
+								currentScale = scale;
+							}
+							if (Ends.HasFlag(Formatting.TagType.LineHeight))
+							{
+								currentLineHeight = lineHeight;
+							}
+							if (Ends.HasFlag(Formatting.TagType.Kerning))
+							{
+								currentKerning = kerning;
+							}
+							break;
+						default:
+							break;
+					}
+				}
+				if (!skipLetter)
+				{
+					Vector2 letterOffset = Vector2.Zero;
+					if (currentLetterDelegate != null)
+					{
+						letterOffset = currentLetterDelegate.Invoke(gameTime, i, cursor, text[i], currentLetterArgs);
+					}
+					Vector2 rotLeft = advanceDir * current.PlaneLeft * currentScale;
+					Vector2 rotRight = advanceDir * current.PlaneRight * currentScale;
+					Vector2 rotTop = upDir * current.PlaneTop * currentScale;
+					Vector2 rotBottom = upDir * current.PlaneBottom * currentScale;
 
-					LayoutVertices[GlyphsLayouted * 4 + 0].Position = new Vector3(cursor + rotRight + rotBottom, depth);
-					LayoutVertices[GlyphsLayouted * 4 + 1].Position = new Vector3(cursor + rotLeft + rotBottom, depth);
-					LayoutVertices[GlyphsLayouted * 4 + 2].Position = new Vector3(cursor + rotLeft + rotTop, depth);
-					LayoutVertices[GlyphsLayouted * 4 + 3].Position = new Vector3(cursor + rotRight + rotTop, depth);
+					LayoutVertices[GlyphsLayouted * 4 + 0].Position = new Vector3(cursor + (currentOffset + letterOffset) * currentScale + rotRight + rotBottom, depth);
+					LayoutVertices[GlyphsLayouted * 4 + 1].Position = new Vector3(cursor + (currentOffset + letterOffset) * currentScale + rotLeft + rotBottom, depth);
+					LayoutVertices[GlyphsLayouted * 4 + 2].Position = new Vector3(cursor + (currentOffset + letterOffset) * currentScale + rotLeft + rotTop, depth);
+					LayoutVertices[GlyphsLayouted * 4 + 3].Position = new Vector3(cursor + (currentOffset + letterOffset) * currentScale + rotRight + rotTop, depth);
 
 					LayoutVertices[GlyphsLayouted * 4 + 0].TextureCoordinate.X = current.AtlasRight;
 					LayoutVertices[GlyphsLayouted * 4 + 0].TextureCoordinate.Y = current.AtlasBottom;
@@ -157,15 +246,15 @@ namespace FontExtension
 					LayoutVertices[GlyphsLayouted * 4 + 3].TextureCoordinate.X = current.AtlasRight;
 					LayoutVertices[GlyphsLayouted * 4 + 3].TextureCoordinate.Y = current.AtlasTop;
 
-					LayoutVertices[GlyphsLayouted * 4 + 0].Color = color;
-					LayoutVertices[GlyphsLayouted * 4 + 1].Color = color;
-					LayoutVertices[GlyphsLayouted * 4 + 2].Color = color;
-					LayoutVertices[GlyphsLayouted * 4 + 3].Color = color;
+					LayoutVertices[GlyphsLayouted * 4 + 0].Color = currentFill;
+					LayoutVertices[GlyphsLayouted * 4 + 1].Color = currentFill;
+					LayoutVertices[GlyphsLayouted * 4 + 2].Color = currentFill;
+					LayoutVertices[GlyphsLayouted * 4 + 3].Color = currentFill;
 
-					LayoutVertices[GlyphsLayouted * 4 + 0].StrokeColor = strokeColor;
-					LayoutVertices[GlyphsLayouted * 4 + 1].StrokeColor = strokeColor;
-					LayoutVertices[GlyphsLayouted * 4 + 2].StrokeColor = strokeColor;
-					LayoutVertices[GlyphsLayouted * 4 + 3].StrokeColor = strokeColor;
+					LayoutVertices[GlyphsLayouted * 4 + 0].StrokeColor = currentStroke;
+					LayoutVertices[GlyphsLayouted * 4 + 1].StrokeColor = currentStroke;
+					LayoutVertices[GlyphsLayouted * 4 + 2].StrokeColor = currentStroke;
+					LayoutVertices[GlyphsLayouted * 4 + 3].StrokeColor = currentStroke;
 
 					LayoutIndices[GlyphsLayouted * 6 + 0] = GlyphsLayouted * 4 + 0;
 					LayoutIndices[GlyphsLayouted * 6 + 1] = GlyphsLayouted * 4 + 1;
@@ -177,19 +266,22 @@ namespace FontExtension
 					GlyphsLayouted++;
 				}
 
-				cursor += advanceDir * current.Advance * scale;
+				if (!skipAdvance)
+				{
+					cursor += advanceDir * current.Advance * currentScale;
 
-				if (kerning && i < text.Length - 1)
-				{
-					if (Font.Kerning.TryGetValue((text[i], text[i + 1]), out float kern))
+					if (currentKerning && i < text.Length - 1)
 					{
-						cursor += advanceDir * kern * scale;
+						if (Font.Kerning.TryGetValue((text[i], text[i + 1]), out float kern))
+						{
+							cursor += advanceDir * kern * currentScale;
+						}
 					}
-				}
-				if (text[i] == '\n')
-				{
-					currentLine++;
-					cursor = cursorStart + upDir * lineHeight * scale * currentLine;
+					if (text[i] == '\n')
+					{
+						currentLine++;
+						cursor = cursorStart + upDir * currentLineHeight * currentScale * currentLine;
+					}
 				}
 			}
 		}
@@ -310,9 +402,10 @@ namespace FontExtension
 		/// <param name="rotation">Amount of rotation in radians</param>
 		/// <param name="origin">Point to rotate around, relative to position</param>
 		/// <param name="depth">Z coordinate to use for glyph vertices</param>
-		public void LayoutText(string text, Vector2 position, Color color, float scale, float rotation, Vector2 origin, float depth = 1f)
+		/// <param name="formatting">Whether to parse and apply formatting tags</param>
+		public void LayoutText(string text, Vector2 position, Color color, float scale, float rotation, Vector2 origin, float depth = 1f, bool formatting = false, GameTime gameTime = null)
 		{
-			LayoutText(text, position, depth, Font.LineHeight, scale, color, Color.Transparent, EnableKerning, PositiveYIsDown, PositionByBaseline, rotation, origin);
+			LayoutText(text, position, depth, Font.LineHeight, scale, color, Color.Transparent, EnableKerning, PositiveYIsDown, PositionByBaseline, rotation, origin, formatting, gameTime);
 		}
 		/// <summary>
 		/// Perform layouting with rotation for a string so that the text can be rendered.
@@ -325,9 +418,10 @@ namespace FontExtension
 		/// <param name="rotation">Amount of rotation in radians</param>
 		/// <param name="origin">Point to rotate around, relative to position</param>
 		/// <param name="depth">Z coordinate to use for glyph vertices</param>
-		public void LayoutText(string text, Vector2 position, Color color, Color strokeColor, float scale, float rotation, Vector2 origin, float depth = 1f)
+		/// <param name="formatting">Whether to parse and apply formatting tags</param>
+		public void LayoutText(string text, Vector2 position, Color color, Color strokeColor, float scale, float rotation, Vector2 origin, float depth = 1f, bool formatting = false, GameTime gameTime = null)
 		{
-			LayoutText(text, position, depth, Font.LineHeight, scale, color, strokeColor, EnableKerning, PositiveYIsDown, PositionByBaseline, rotation, origin);
+			LayoutText(text, position, depth, Font.LineHeight, scale, color, strokeColor, EnableKerning, PositiveYIsDown, PositionByBaseline, rotation, origin, formatting, gameTime);
 		}
 		/// <summary>
 		/// Perform layouting for a string so that the text can be rendered.
@@ -337,9 +431,17 @@ namespace FontExtension
 		/// <param name="color">Color to draw text.</param>
 		/// <param name="scale">How large to draw the text.</param>
 		/// <param name="depth">Z coordinate to use for glyph vertices</param>
-		public void LayoutText(string text, Vector2 position, Color color, float scale = 16, float depth = 1f)
+		/// <param name="formatting">Whether to parse and apply formatting tags</param>
+		public void LayoutText(string text, Vector2 position, Color color, float scale = 16, float depth = 1f, bool formatting = false, GameTime gameTime = null)
 		{
-			LayoutText(text, position, depth, Font.LineHeight, scale, color, Color.Transparent, EnableKerning, PositiveYIsDown, PositionByBaseline);
+			if (formatting)
+			{
+				LayoutText(text, position, depth, Font.LineHeight, scale, color, Color.Transparent, EnableKerning, PositiveYIsDown, PositionByBaseline, 0, Vector2.Zero, formatting, gameTime);
+			}
+			else
+			{
+				LayoutText(text, position, depth, Font.LineHeight, scale, color, Color.Transparent, EnableKerning, PositiveYIsDown, PositionByBaseline);
+			}
 		}
 		/// <summary>
 		/// Perform layouting for a string so that the text can be rendered.
@@ -350,9 +452,17 @@ namespace FontExtension
 		/// <param name="strokeColor">Color to draw text outlines.</param>
 		/// <param name="scale">How large to draw the text.</param>
 		/// <param name="depth">Z coordinate to use for glyph vertices</param>
-		public void LayoutText(string text, Vector2 position, Color color, Color strokeColor, float scale = 16, float depth = 1f)
+		/// <param name="formatting">Whether to parse and apply formatting tags</param>
+		public void LayoutText(string text, Vector2 position, Color color, Color strokeColor, float scale = 16, float depth = 1f, bool formatting = false, GameTime gameTime = null)
 		{
-			LayoutText(text, position, depth, Font.LineHeight, scale, color, strokeColor, EnableKerning, PositiveYIsDown, PositionByBaseline);
+			if (formatting)
+			{
+				LayoutText(text, position, depth, Font.LineHeight, scale, color, strokeColor, EnableKerning, PositiveYIsDown, PositionByBaseline, 0, Vector2.Zero, formatting, gameTime);
+			}
+			else
+			{
+				LayoutText(text, position, depth, Font.LineHeight, scale, color, strokeColor, EnableKerning, PositiveYIsDown, PositionByBaseline);
+			}
 		}
 		/// <summary>
 		/// Render text with outline that has been layouted since last use of ResetLayout, overriding settings from TextRenderer.
