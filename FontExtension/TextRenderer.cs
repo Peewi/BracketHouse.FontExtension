@@ -222,7 +222,7 @@ namespace FontExtension
 					Vector2 letterOffset = Vector2.Zero;
 					if (currentLetterDelegate != null)
 					{
-						letterOffset = currentLetterDelegate.Invoke(gameTime, i, cursor, text[i], currentLetterArgs);
+						letterOffset = currentLetterDelegate.Invoke(gameTime, i, cursor / currentScale, text[i], currentLetterArgs);
 					}
 					Vector2 rotLeft = advanceDir * current.PlaneLeft * currentScale;
 					Vector2 rotRight = advanceDir * current.PlaneRight * currentScale;

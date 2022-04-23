@@ -305,7 +305,7 @@ namespace FontExtension
 		/// <returns>A <c>Vector2</c> to be added to letter position.</returns>
 		internal static Vector2 Sine(GameTime gameTime, int charNum, Vector2 position, char currentChar, string[] args)
 		{
-			float val = MathF.Sin((float)gameTime.TotalGameTime.TotalSeconds * 5f + position.X / 32) / 3f;
+			float val = MathF.Sin((float)gameTime.TotalGameTime.TotalSeconds * 5f + position.X) / 3f;
 			return new Vector2(0, val);
 		}
 		/// <summary>

@@ -58,7 +58,7 @@ namespace FontExtension
 		/// </summary>
 		/// <param name="gameTime">A gametime object. Useful for animated effects.</param>
 		/// <param name="charNum">The index of the letter about to be rendered, ignoring formatting tags.</param>
-		/// <param name="position">Position of the current character in the rendered text.</param>
+		/// <param name="position">Text cursor position, independent of scale.</param>
 		/// <param name="currentChar">Char for the glyph that is about to be rendered</param>
 		/// <param name="args">Array of argument strings. Note that the first element will be the name of the command.</param>
 		/// <returns>A vector that will be multiplied by the text scale and then added to the letter position.</returns>
