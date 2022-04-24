@@ -176,7 +176,7 @@ namespace FontExtension
                 bool skipLetter = false;
 				if (formatting && text[i] == '[')
 				{
-                    var (tagDelegate, tagType, tagArgs, tagStringLength) = Formatting.FindTag(text, i);
+                    var (_, _, _, tagStringLength) = Formatting.FindTag(text, i);
                     i += tagStringLength;
 				}
 				if (!skipLetter)
