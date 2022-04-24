@@ -20,6 +20,7 @@ namespace MonoMSDF
 		Stopwatch frameWatch;
 		long frameTime = 0;
 		long frameTicks = 0;
+		long peakTicks = 0;
 		float scale = 1;
 		int scrolled = 0;
 
@@ -88,6 +89,10 @@ namespace MonoMSDF
 			{
 				scale -= 0.1f;
 			}
+			if (Keyboard.GetState().IsKeyDown(Keys.Enter))
+			{
+				peakTicks = 0;
+			}
 			scrolled = scroll;
 			var noformat = mainFont.MeasureString("[Red]Red");
 			var yesformat = mainFont.MeasureString("[Red]Red", true);
@@ -145,13 +150,13 @@ namespace MonoMSDF
 			//textRenderer.EnableKerning = true;
 			//this.textRenderer.LayoutText($"LESS BIG\nIN BACK", new Vector2(100, 300), Color.Blue, Color.Orange, 32 * 2, 0.1f);
 			////this.textRenderer.LayoutText($"Hære's something. Comma: ,", new Vector2(0, 720-128), Color.Black, Color.Gold, 32);
-			this.textRenderer.LayoutText($"Frame time: 0{frameTicks} ticks\nFrame time: {frameTime}ms", new Vector2(0, 720 - 265), Color.Gold, Color.Black, 64);
+			this.textRenderer.LayoutText($"Frame time: {frameTicks} ticks\nFrame time: {frameTime}ms\nPeak time: {peakTicks} ticks", new Vector2(0, 720 - 265), Color.Gold, Color.Black, 64);
 			this.textRenderer.LayoutText($"Running for {gameTime.TotalGameTime.TotalSeconds} seconds", new Vector2(0, 720 - 40), Color.Gold, Color.Black, 32);
 			//this.textRenderer.LayoutText($"REALLY BIG\nIN FRONT", new Vector2(0, 200), Color.Transparent, Color.Gold, 32 * 5, formatting: true);
 			//string formatDemo1 = $"[scale 1.5][offset 1 0][#ff0000ff]Red[end scale]\n[kerning false][-128 0 0]Red[end kerning]\n[scale 1][fill green]Green\n[en\u200Bd scale][blue]Blue\n[end fill offset][stroke 128 0 0 100][nonsense]";
 			string formatDemo1 = $"[\u200Bstroke white][\u200B#ff0000]Red[\u200Bfill 0 128 0]Green[\u200Bblue]Blue\nBecomes\n[stroke white][#ff0000]Red[fill 0 128 0]Green[blue]Blue";
 			string formatDemo2 = $"[\u200Bscale 4][\u200Brainbow][\u200Bsine]RAINBOW\nBecomes\n\n\n[scale 4][rainbow][sine]RAINBOW";
-			this.textRenderer.LayoutText(formatDemo1, new Vector2(20, 20), Color.White, Color.Black, 32, formatting: true);
+			this.textRenderer.LayoutText(formatDemo1, new Vector2(20, 20), Color.White, Color.Black, 32, formatting: true, gameTime: gameTime);
 			this.textRenderer.LayoutText(formatDemo2, new Vector2(300, 150), Color.White, Color.Black, 32, formatting: true, gameTime: gameTime);
 			//this.textRenderer.RenderStroke();
 			//this.textRenderer.RenderText();
@@ -166,6 +171,7 @@ namespace MonoMSDF
 			//segoescriptRenderer.RenderStrokedText();
 
 			frameTicks = frameWatch.ElapsedTicks;
+			peakTicks = Math.Max(peakTicks, frameTicks);
 			frameTime = frameWatch.ElapsedMilliseconds;
 			frameWatch.Stop();
 		}
