@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 
-namespace FontExtension
+namespace BracketHouse.FontExtension
 {
 	internal class FieldGlyph
 	{

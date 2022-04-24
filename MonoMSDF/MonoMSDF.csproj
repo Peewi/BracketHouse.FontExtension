@@ -21,6 +21,6 @@
 	  <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.0.1641" />
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\FontExtension\FontExtension.csproj" />
+	  <ProjectReference Include="..\FontExtension\BracketHouse.FontExtension.csproj" />
 	</ItemGroup>
 </Project>

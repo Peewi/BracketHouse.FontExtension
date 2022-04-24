@@ -10,7 +10,7 @@
 
 #-------------------------------- References --------------------------------#
 
-/reference:..\..\FontExtension\bin\Debug\netcoreapp3.1\FontExtension.dll
+/reference:..\..\FontExtension\bin\Debug\netcoreapp3.1\BracketHouse.FontExtension.dll
 
 #---------------------------------- Content ---------------------------------#
 

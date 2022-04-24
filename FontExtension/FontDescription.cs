@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace FontExtension
+namespace BracketHouse.FontExtension
 {
     public class FontDescription
     {

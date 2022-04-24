@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace FontExtension
+namespace BracketHouse.FontExtension
 {
 	public static class Formatting
 	{

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
-namespace FontExtension
+namespace BracketHouse.FontExtension
 {
 	internal static class FormattingFunctions
 	{

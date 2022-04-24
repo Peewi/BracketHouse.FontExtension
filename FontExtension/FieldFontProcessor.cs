@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content.Pipeline;
 
-namespace FontExtension
+namespace BracketHouse.FontExtension
 {
 
 	[ContentProcessor(DisplayName = "Field Font Processor")]

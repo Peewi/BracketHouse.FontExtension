@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace FontExtension
+namespace BracketHouse.FontExtension
 {
 	/// <summary>
 	/// Vertex type with position, texture coordinate and two colors.

@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Framework.Utilities;
 
-namespace FontExtension
+namespace BracketHouse.FontExtension
 {
 	public sealed class TextRenderer
 	{
@@ -98,7 +98,7 @@ namespace FontExtension
 				case GraphicsBackend.Metal:
 					break;
 			}
-			shaderName = $"FontExtension.{shaderName}";
+			shaderName = $"BracketHouse.FontExtension.{shaderName}";
 			string tempName = $"{Path.GetTempFileName()}";
 			using (Stream shader = Assembly.GetExecutingAssembly().GetManifestResourceStream($"{shaderName}.xnb"))
 			{

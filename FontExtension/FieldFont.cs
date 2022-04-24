@@ -6,7 +6,7 @@ using System.Text.Json;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 
-namespace FontExtension
+namespace BracketHouse.FontExtension
 {
     /// <summary>
     /// A font for use with TextRenderer.
