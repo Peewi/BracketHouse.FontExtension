@@ -115,6 +115,7 @@ namespace FontExtension
 		static readonly Dictionary<string, KerningDelegate> KerningTags = new Dictionary<string, KerningDelegate>();
 		static readonly Dictionary<string, SpecialDelegate> SpecialTags = new Dictionary<string, SpecialDelegate>();
 		static readonly Dictionary<string, EndFormatDelegate> EndTags = new Dictionary<string, EndFormatDelegate>();
+		static readonly Dictionary<string, string[]> TagArgsCache = new Dictionary<string, string[]>();
 
 		static Formatting()
 		{
@@ -305,10 +306,11 @@ namespace FontExtension
 				if (text[i] == ']')
 				{
 					tagStringLength = i - startIndex;
-					tagArgs = text[(startIndex + 1)..i].Split();
-					for (int j = 0; j < tagArgs.Length; j++)
+					string fullTag = text[(startIndex + 1)..i].ToLowerInvariant();
+					if (!TagArgsCache.TryGetValue(fullTag, out tagArgs))
 					{
-						tagArgs[j] = tagArgs[j].ToLowerInvariant();
+						tagArgs = fullTag.Split();
+						TagArgsCache[fullTag] = tagArgs;
 					}
 					break;
 				}
