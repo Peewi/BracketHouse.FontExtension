@@ -41,34 +41,21 @@ namespace MonoMSDF
 
 		protected override void Initialize()
 		{
+			TextRenderer.Initialize(graphics, Window);
 			base.Initialize();
 			frameWatch = new Stopwatch();
 		}
 
 		protected override void LoadContent()
 		{
-			var effect = this.Content.Load<Effect>("FieldFontEffect");
+			graphics.PreferredBackBufferWidth = 1280;
+			graphics.PreferredBackBufferHeight = 720;
+			graphics.ApplyChanges();
 			mainFont = this.Content.Load<FieldFont>("arial");
 			segoescriptFont = this.Content.Load<FieldFont>("segoescript");
 
-			this.textRenderer = new TextRenderer(effect, mainFont, this.GraphicsDevice)
-			{
-				//LineHeight = 1f,
-				//OptimizeForTinyText = true
-			};
-			this.segoescriptRenderer = new TextRenderer(effect, segoescriptFont, this.GraphicsDevice)
-			{
-				PositiveYIsDown = true
-			};
-			textRenderer.SetOrtographicProjection(1280, 720);
-			segoescriptRenderer.SetOrtographicProjection(1280, 720);
-			graphics.PreparingDeviceSettings += (sender, e) =>
-			{
-				int w = e.GraphicsDeviceInformation.PresentationParameters.BackBufferWidth;
-				int h = e.GraphicsDeviceInformation.PresentationParameters.BackBufferHeight;
-				textRenderer.SetOrtographicProjection(w, h);
-				segoescriptRenderer.SetOrtographicProjection(w, h);
-			};
+			this.textRenderer = new TextRenderer(mainFont, GraphicsDevice, Content);
+			this.segoescriptRenderer = new TextRenderer(segoescriptFont, GraphicsDevice, Content);
 			this.GraphicsDevice.BlendState = BlendState.AlphaBlend;
 			this.GraphicsDevice.DepthStencilState = DepthStencilState.None;
 			this.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
@@ -165,7 +152,7 @@ namespace MonoMSDF
 			this.segoescriptRenderer.ResetLayout();
 			string cursorText = $"This is rotated.\nAnd a different font.";
 			Vector2 ctMeasure = segoescriptFont.MeasureString(cursorText) * scale * 32;
-			//this.segoescriptRenderer.LayoutText(cursorText, Mouse.GetState().Position.ToVector2() - ctMeasure / 2, Color.Black, Color.White, scale * 32, totalTime, ctMeasure / 2);
+			this.segoescriptRenderer.LayoutText(cursorText, Mouse.GetState().Position.ToVector2() - ctMeasure / 2, Color.Black, Color.White, scale * 32, totalTime, ctMeasure / 2);
 			this.segoescriptRenderer.RenderStroke();
 			this.segoescriptRenderer.RenderText();
 			//segoescriptRenderer.RenderStrokedText();

@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Framework.Utilities;
 
 namespace FontExtension
 {
@@ -25,20 +28,125 @@ namespace FontExtension
 		private int[] LayoutIndices = new int[100 * 6];
 		private int GlyphsLayouted = 0;
 
-		public TextRenderer(Effect effect, FieldFont font, GraphicsDevice device)
+		private static bool Initialized = false;
+		private static Effect SharedEffect;
+		private static Matrix Shared2DMatrix;
+		/// <summary>
+		/// Create <c>TextRenderer</c> for a given font, using the shader from the library.
+		/// </summary>
+		/// <param name="font"><c>FieldFont</c> that will be used by this renderer.</param>
+		/// <param name="device">Used for rendering.</param>
+		/// <param name="content">Used for loading the shader that will be used for text rendering.</param>
+		public TextRenderer(FieldFont font, GraphicsDevice device, ContentManager content)
 		{
-			this.Effect = effect;
-			this.Font = font;
-			this.Device = device;
+			if (!Initialized)
+			{
+				//Initialize(device);
+				throw new InvalidOperationException("Call TextRenderer.Initialize first.");
+			}
+			Effect = SharedEffect ??= LoadDefaultShader(content);
+			Font = font;
+			Device = device;
 			using (var stream = new MemoryStream(font.Bitmap))
 			{
-				this.AtlasTexture = Texture2D.FromStream(this.Device, stream);
+				AtlasTexture = Texture2D.FromStream(Device, stream);
 			}
-
-			this.EnableKerning = true;
-			this.OptimizeForTinyText = false;
-			this.PositiveYIsDown = false;
-			this.PositionByBaseline = false;
+			UseScreenSpace = true;
+			EnableKerning = true;
+			OptimizeForTinyText = false;
+			PositiveYIsDown = true;
+			PositionByBaseline = false;
+		}
+		public TextRenderer(FieldFont font, GraphicsDevice device, Effect effect)
+		{
+			if (!Initialized)
+			{
+				//Initialize(device);
+				throw new InvalidOperationException("Call TextRenderer.Initialize first.");
+			}
+			Effect = effect;
+			Font = font;
+			Device = device;
+			using (var stream = new MemoryStream(font.Bitmap))
+			{
+				AtlasTexture = Texture2D.FromStream(Device, stream);
+			}
+			UseScreenSpace = true;
+			EnableKerning = true;
+			OptimizeForTinyText = false;
+			PositiveYIsDown = true;
+			PositionByBaseline = false;
+		}
+		/// <summary>
+		/// Extract shader from assembly, load it, and delete the temp file.
+		/// </summary>
+		/// <param name="content">ContentManager to load shader with.</param>
+		/// <returns>The field font effect, compiled for the current platform.</returns>
+		private static Effect LoadDefaultShader(ContentManager content)
+		{
+			string shaderName = "FieldFontEffectWinDX";
+			switch (PlatformInfo.GraphicsBackend)
+			{
+				case GraphicsBackend.DirectX:
+					shaderName = "FieldFontEffectWinDX";
+					break;
+				case GraphicsBackend.OpenGL:
+					shaderName = "FieldFontEffectDesktopGL";
+					break;
+				case GraphicsBackend.Vulkan:
+					break;
+				case GraphicsBackend.Metal:
+					break;
+			}
+			shaderName = $"FontExtension.{shaderName}";
+			string tempName = $"{Path.GetTempFileName()}";
+			using (Stream shader = Assembly.GetExecutingAssembly().GetManifestResourceStream($"{shaderName}.xnb"))
+			{
+				using (FileStream target = File.Create($"{tempName}.xnb"))
+				{
+					target.Seek(0, SeekOrigin.Begin);
+					shader.CopyTo(target);
+				}	
+			}
+			var retval = content.Load<Effect>(tempName);
+			File.Delete($"{tempName}.xnb");
+			return retval;
+		}
+		/// <summary>
+		/// Make sure <c>Shared2DMatrix</c> is kept updated.
+		/// </summary>
+		/// <param name="deviceMan"></param>
+		/// <param name="window"></param>
+		public static void Initialize(GraphicsDeviceManager deviceMan, GameWindow window)
+		{
+			Initialized = true;
+			// Update the shared 2D matrix every time resolution is changed.
+			window.ClientSizeChanged += (sender, e) =>
+			{ // ClientSizeChanged is only necessary in DesktopGL, as in WinDX PreparingDeviceSettings is raised when changing window size and is therefore enough.
+				SetShared2DMatrix(window.ClientBounds.Width, window.ClientBounds.Height);
+			};
+			deviceMan.PreparingDeviceSettings += (sender, e) =>
+			{
+				int width = e.GraphicsDeviceInformation.PresentationParameters.BackBufferWidth;
+				int height = e.GraphicsDeviceInformation.PresentationParameters.BackBufferHeight;
+				SetShared2DMatrix(width, height);
+			};
+			// Set the shared 2D matrix immediately.
+			SetShared2DMatrix(deviceMan.PreferredBackBufferWidth, deviceMan.PreferredBackBufferHeight);
+		}
+		/// <summary>
+		/// Set <c>Shared2DMatrix</c> so that drawing will be in screen coordinates.
+		/// </summary>
+		/// <param name="width">Screen width</param>
+		/// <param name="height">Screen height</param>
+		private static void SetShared2DMatrix(int width, int height)
+		{
+			Vector3 camTarget = new Vector3(0, 0, 100f);
+			Vector3 camPosition = new Vector3(0, 0, 0f);
+			Matrix projectionMatrix = Matrix.CreateOrthographicOffCenter(0, width, -height, 0, 0, 200);
+			Matrix viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up);
+			Matrix worldMatrix = Matrix.CreateWorld(camTarget, Vector3.Forward, Vector3.Down);
+			Shared2DMatrix = worldMatrix * viewMatrix * projectionMatrix;
 		}
 		/// <summary>
 		/// Layouting setting. Use kerning when layouting text.
@@ -57,7 +165,11 @@ namespace FontExtension
 		/// </summary>
 		public bool PositionByBaseline { get; set; }
 		/// <summary>
-		/// WorldViewProjection Matrix to use during rendering.
+		/// Whether to use an auto-generated matrix that renders in screenspace coordinates.
+		/// </summary>
+		public bool UseScreenSpace { get; set; }
+		/// <summary>
+		/// WorldViewProjection Matrix to use during rendering when <c>UseScreenSpace</c> is false.
 		/// </summary>
 		public Matrix WorldViewProjection { get; set; }
 
@@ -469,7 +581,7 @@ namespace FontExtension
 		/// </summary>
 		/// <param name="worldViewProjection">WorldViewProjection Matrix to use during rendering.</param>
 		/// <param name="tinyText">Disables text anti-aliasing which might cause blurry text when the text is rendered tiny</param>
-		public void RenderStrokedText(Matrix worldViewProjection, bool tinyText)
+		private void RenderStrokedText(Matrix worldViewProjection, bool tinyText)
 		{
 			if (GlyphsLayouted == 0)
 			{
@@ -477,26 +589,26 @@ namespace FontExtension
 			}
 			var textureWidth = AtlasTexture.Width;
 			var textureHeight = AtlasTexture.Height;
-			this.Effect.Parameters["WorldViewProjection"].SetValue(worldViewProjection);
-			this.Effect.Parameters["PxRange"].SetValue(this.Font.PxRange);
-			this.Effect.Parameters["TextureSize"].SetValue(new Vector2(textureWidth, textureHeight));
-			this.Effect.Parameters["GlyphTexture"].SetValue(AtlasTexture);
+			Effect.Parameters["WorldViewProjection"].SetValue(UseScreenSpace ? Shared2DMatrix : worldViewProjection);
+			Effect.Parameters["PxRange"].SetValue(Font.PxRange);
+			Effect.Parameters["TextureSize"].SetValue(new Vector2(textureWidth, textureHeight));
+			Effect.Parameters["GlyphTexture"].SetValue(AtlasTexture);
 			if (tinyText)
 			{
-				this.Effect.CurrentTechnique = this.Effect.Techniques[SmallStrokedTextTechnique];
+				Effect.CurrentTechnique = Effect.Techniques[SmallStrokedTextTechnique];
 			}
 			else
 			{
-				this.Effect.CurrentTechnique = this.Effect.Techniques[LargeStrokedTextTechnique];
+				Effect.CurrentTechnique = Effect.Techniques[LargeStrokedTextTechnique];
 			}
-			this.Effect.CurrentTechnique.Passes[0].Apply();
+			Effect.CurrentTechnique.Passes[0].Apply();
 			Device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, LayoutVertices, 0, GlyphsLayouted * 4, LayoutIndices, 0, GlyphsLayouted * 2);
 		}
 		/// <summary>
 		/// Render text with outline that has been layouted since last use of ResetLayout, overriding WorldViewProjection matrix from TextRenderer.
 		/// </summary>
 		/// <param name="worldViewProjection">WorldViewProjection Matrix to use during rendering.</param>
-		public void RenderStrokedText(Matrix worldViewProjection)
+		private void RenderStrokedText(Matrix worldViewProjection)
 		{
 			RenderStrokedText(worldViewProjection, OptimizeForTinyText);
 		}
@@ -512,7 +624,7 @@ namespace FontExtension
 		/// </summary>
 		/// <param name="worldViewProjection">WorldViewProjection Matrix to use during rendering.</param>
 		/// <param name="tinyText">Disables text anti-aliasing which might cause blurry text when the text is rendered tiny</param>
-		public void RenderText(Matrix worldViewProjection, bool tinyText)
+		private void RenderText(Matrix worldViewProjection, bool tinyText)
 		{
 			if (GlyphsLayouted == 0)
 			{
@@ -520,26 +632,26 @@ namespace FontExtension
 			}
 			var textureWidth = AtlasTexture.Width;
 			var textureHeight = AtlasTexture.Height;
-			this.Effect.Parameters["WorldViewProjection"].SetValue(worldViewProjection);
-			this.Effect.Parameters["PxRange"].SetValue(this.Font.PxRange);
-			this.Effect.Parameters["TextureSize"].SetValue(new Vector2(textureWidth, textureHeight));
-			this.Effect.Parameters["GlyphTexture"].SetValue(AtlasTexture);
+			Effect.Parameters["WorldViewProjection"].SetValue(UseScreenSpace ? Shared2DMatrix : worldViewProjection);
+			Effect.Parameters["PxRange"].SetValue(Font.PxRange);
+			Effect.Parameters["TextureSize"].SetValue(new Vector2(textureWidth, textureHeight));
+			Effect.Parameters["GlyphTexture"].SetValue(AtlasTexture);
 			if (tinyText)
 			{
-				this.Effect.CurrentTechnique = this.Effect.Techniques[SmallTextTechnique];
+				Effect.CurrentTechnique = Effect.Techniques[SmallTextTechnique];
 			}
 			else
 			{
-				this.Effect.CurrentTechnique = this.Effect.Techniques[LargeTextTechnique];
+				Effect.CurrentTechnique = Effect.Techniques[LargeTextTechnique];
 			}
-			this.Effect.CurrentTechnique.Passes[0].Apply();
+			Effect.CurrentTechnique.Passes[0].Apply();
 			Device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, LayoutVertices, 0, GlyphsLayouted * 4, LayoutIndices, 0, GlyphsLayouted * 2);
 		}
 		/// <summary>
 		/// Render text that has been layouted since last use of ResetLayout, overriding WorldViewProjection matrix from TextRenderer.
 		/// </summary>
 		/// <param name="worldViewProjection">WorldViewProjection Matrix to use during rendering.</param>
-		public void RenderText(Matrix worldViewProjection)
+		private void RenderText(Matrix worldViewProjection)
 		{
 			RenderText(worldViewProjection, OptimizeForTinyText);
 		}
@@ -555,7 +667,7 @@ namespace FontExtension
 		/// </summary>
 		/// <param name="worldViewProjection"></param>
 		/// <param name="tinyText"></param>
-		public void RenderStroke(Matrix worldViewProjection, bool tinyText)
+		private void RenderStroke(Matrix worldViewProjection, bool tinyText)
 		{
 			if (GlyphsLayouted == 0)
 			{
@@ -563,19 +675,19 @@ namespace FontExtension
 			}
 			var textureWidth = AtlasTexture.Width;
 			var textureHeight = AtlasTexture.Height;
-			this.Effect.Parameters["WorldViewProjection"].SetValue(worldViewProjection);
-			this.Effect.Parameters["PxRange"].SetValue(this.Font.PxRange);
-			this.Effect.Parameters["TextureSize"].SetValue(new Vector2(textureWidth, textureHeight));
-			this.Effect.Parameters["GlyphTexture"].SetValue(AtlasTexture);
+			Effect.Parameters["WorldViewProjection"].SetValue(UseScreenSpace ? Shared2DMatrix : worldViewProjection);
+			Effect.Parameters["PxRange"].SetValue(Font.PxRange);
+			Effect.Parameters["TextureSize"].SetValue(new Vector2(textureWidth, textureHeight));
+			Effect.Parameters["GlyphTexture"].SetValue(AtlasTexture);
 			if (tinyText)
 			{
-				this.Effect.CurrentTechnique = this.Effect.Techniques[SmallStrokeTechnique];
+				Effect.CurrentTechnique = Effect.Techniques[SmallStrokeTechnique];
 			}
 			else
 			{
-				this.Effect.CurrentTechnique = this.Effect.Techniques[LargeStrokeTechnique];
+				Effect.CurrentTechnique = Effect.Techniques[LargeStrokeTechnique];
 			}
-			this.Effect.CurrentTechnique.Passes[0].Apply();
+			Effect.CurrentTechnique.Passes[0].Apply();
 			Device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, LayoutVertices, 0, GlyphsLayouted * 4, LayoutIndices, 0, GlyphsLayouted * 2);
 		}
 		/// <summary>
