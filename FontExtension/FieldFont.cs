@@ -206,7 +206,7 @@ namespace BracketHouse.FontExtension
         /// <param name="text">String to measure.</param>
         /// <param name="formatting">Whether to check for formatting tags and skip measuring them. Does not considers scale.</param>
         /// <returns>Width and height of the string if drawn with scale 1.0.</returns>
-        public Vector2 MeasureString(string text, bool formatting = false)
+        public Vector2 MeasureString(string text, bool formatting = true)
 		{
             return MeasureString(text, LineHeight, true, formatting);
         }
@@ -217,7 +217,7 @@ namespace BracketHouse.FontExtension
         /// <param name="kerning">Whether to use kerning.</param>
         /// <param name="formatting">Whether to check for formatting tags and skip measuring them. Does not considers scale.</param>
         /// <returns>Width and height of the string if drawn with scale 1.0.</returns>
-        public Vector2 MeasureString(string text, bool kerning, bool formatting = false)
+        public Vector2 MeasureString(string text, bool kerning, bool formatting = true)
         {
             return MeasureString(text, LineHeight, kerning, formatting);
         }
