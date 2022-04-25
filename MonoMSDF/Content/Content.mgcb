@@ -14,13 +14,13 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin arial.json
+#begin arial.bhfont
 /importer:FieldFontImporter
 /processor:FieldFontProcessor
 /processorParam:ExternalPath=msdf-atlas-gen.exe
 /processorParam:Resolution=64
 /processorParam:Range=8
-/build:arial.json
+/build:arial.bhfont
 
 #begin FieldFontEffect.fx
 /importer:EffectImporter
@@ -28,26 +28,26 @@
 /processorParam:DebugMode=Auto
 /build:FieldFontEffect.fx
 
-#begin segoe.json
+#begin segoe.bhfont
 /importer:FieldFontImporter
 /processor:FieldFontProcessor
 /processorParam:ExternalPath=msdf-atlas-gen.exe
 /processorParam:Resolution=64
 /processorParam:Range=8
-/build:segoe.json
+/build:segoe.bhfont
 
-#begin segoescript.json
+#begin segoescript.bhfont
 /importer:FieldFontImporter
 /processor:FieldFontProcessor
 /processorParam:ExternalPath=msdf-atlas-gen.exe
 /processorParam:Resolution=64
 /processorParam:Range=8
-/build:segoescript.json
+/build:segoescript.bhfont
 
-#begin consola.json
+#begin consola.bhfont
 /importer:FieldFontImporter
 /processor:FieldFontProcessor
 /processorParam:ExternalPath=msdf-atlas-gen.exe
 /processorParam:Resolution=64
 /processorParam:Range=8
-/build:consola.json
+/build:consola.bhfont
