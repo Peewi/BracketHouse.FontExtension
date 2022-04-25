@@ -1,5 +1,5 @@
-# MSDF
-A signed distance field font renderer for monogame. It is based off [roy-t/MSDF](https://github.com/roy-t/MSDF), adding features, improving performance and reducing the number of dependencies.
+# BracketHouse.FontExtension
+A signed distance field font renderer for MonoGame. It is based off [roy-t/MSDF](https://github.com/roy-t/MSDF), adding features, improving performance and reducing the number of dependencies.
 
 ![Sample](textrenderexample.png "Sample")
 
