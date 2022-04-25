@@ -196,7 +196,9 @@ namespace BracketHouse.FontExtension
 		/// <param name="rotation">Amount of rotation in radians</param>
 		/// <param name="origin">Point to rotate around, relative to position</param>
 		/// <param name="formatting">Whether to parse and apply formatting tags</param>
-		void LayoutText(string text, Vector2 position, float depth, float lineHeight, float scale, Color color, Color strokeColor, bool kerning, bool yIsDown, bool positionByBaseline, float rotation, Vector2 origin, bool formatting, GameTime gameTime)
+		/// <param name="gameTime"></param>
+		/// <param name="maxChars">Stop after this many characters, not counting formatting tags. Negative numbers indicate no limit.</param>
+		void LayoutText(string text, Vector2 position, float depth, float lineHeight, float scale, Color color, Color strokeColor, bool kerning, bool yIsDown, bool positionByBaseline, float rotation, Vector2 origin, bool formatting, GameTime gameTime, int maxChars)
 		{
 			if (string.IsNullOrEmpty(text))
 			{
@@ -233,9 +235,13 @@ namespace BracketHouse.FontExtension
 			}
 			Vector2 cursor = cursorStart;
 			int currentLine = 0;
-
+			int numChars = 0;
 			for (var i = 0; i < text.Length; i++)
 			{
+				if (maxChars >= 0 && numChars >= maxChars)
+				{
+					break;
+				}
 				FieldGlyph current = Font.GetGlyph(text[i]);
 				bool skipLetter = char.IsWhiteSpace(text[i]);
 				bool skipAdvance = false;
@@ -363,6 +369,7 @@ namespace BracketHouse.FontExtension
 
 				if (!skipAdvance)
 				{
+					numChars++;
 					cursor += advanceDir * current.Advance * currentScale;
 
 					if (currentKerning && i < text.Length - 1)
@@ -393,7 +400,7 @@ namespace BracketHouse.FontExtension
 		/// <param name="kerning">Override <c>EnableKerning</c> property.</param>
 		/// <param name="yIsDown">Override <c>PositiveYIsDown</c> property.</param>
 		/// <param name="positionByBaseline">Override <c>PositionByBaseline</c> property.</param>
-		void LayoutText(string text, Vector2 position, float depth, float lineHeight, float scale, Color color, Color strokeColor, bool kerning, bool yIsDown, bool positionByBaseline)
+		void SimpleLayoutText(string text, Vector2 position, float depth, float lineHeight, float scale, Color color, Color strokeColor, bool kerning, bool yIsDown, bool positionByBaseline, int maxChars)
 		{
 			if (string.IsNullOrEmpty(text))
 			{
@@ -411,9 +418,14 @@ namespace BracketHouse.FontExtension
 				penStart.Y += scale * Font.Ascender * yFlip;
 			}
 			Vector2 pen = penStart;
+			int numChars = 0;
 
 			for (var i = 0; i < text.Length; i++)
 			{
+				if (maxChars >= 0 && numChars >= maxChars)
+				{
+					break;
+				}
 				FieldGlyph current = Font.GetGlyph(text[i]);
 
 				if (!char.IsWhiteSpace(text[i]))
@@ -475,6 +487,7 @@ namespace BracketHouse.FontExtension
 
 				if (kerning && i < text.Length - 1)
 				{
+					numChars++;
 					if (Font.Kerning.TryGetValue((text[i], text[i + 1]), out float kern))
 					{
 						pen.X += kern * scale;
@@ -488,22 +501,22 @@ namespace BracketHouse.FontExtension
 			}
 		}
 		/// <summary>
-		/// Perform layouting with rotation for a string so that the text can be rendered.
+		/// Perform layouting with rotation for a string so that the text can be rendered, parsing formatting tags..
 		/// </summary>
+		/// <param name="gameTime"></param>
 		/// <param name="text">Text to draw.</param>
 		/// <param name="position">Position to draw to.</param>
 		/// <param name="color">Color to draw text.</param>
 		/// <param name="scale">How large to draw the text.</param>
 		/// <param name="rotation">Amount of rotation in radians</param>
 		/// <param name="origin">Point to rotate around, relative to position</param>
-		/// <param name="depth">Z coordinate to use for glyph vertices</param>
-		/// <param name="formatting">Whether to parse and apply formatting tags</param>
-		public void LayoutText(string text, Vector2 position, Color color, float scale, float rotation, Vector2 origin, float depth = 1f, bool formatting = false, GameTime gameTime = null)
+		/// <param name="maxChars">Stop after this many characters, not counting formatting tags. Negative numbers indicate no limit.</param>
+		public void LayoutText(GameTime gameTime, string text, Vector2 position, Color color, Color strokeColor, float scale, float rotation, Vector2 origin, int maxChars = -1)
 		{
-			LayoutText(text, position, depth, Font.LineHeight, scale, color, Color.Transparent, EnableKerning, PositiveYIsDown, PositionByBaseline, rotation, origin, formatting, gameTime);
+			LayoutText(text, position, 1f, Font.LineHeight, scale, color, strokeColor, EnableKerning, PositiveYIsDown, PositionByBaseline, rotation, origin, true, gameTime, maxChars);
 		}
 		/// <summary>
-		/// Perform layouting with rotation for a string so that the text can be rendered.
+		/// Perform layouting with rotation, but ignoring formatting tags, for a string so that the text can be rendered.
 		/// </summary>
 		/// <param name="text">Text to draw.</param>
 		/// <param name="position">Position to draw to.</param>
@@ -512,31 +525,24 @@ namespace BracketHouse.FontExtension
 		/// <param name="scale">How large to draw the text.</param>
 		/// <param name="rotation">Amount of rotation in radians</param>
 		/// <param name="origin">Point to rotate around, relative to position</param>
-		/// <param name="depth">Z coordinate to use for glyph vertices</param>
-		/// <param name="formatting">Whether to parse and apply formatting tags</param>
-		public void LayoutText(string text, Vector2 position, Color color, Color strokeColor, float scale, float rotation, Vector2 origin, float depth = 1f, bool formatting = false, GameTime gameTime = null)
+		/// <param name="maxChars">Stop after this many characters. Negative numbers indicate no limit.</param>
+		public void LayoutText(string text, Vector2 position, Color color, Color strokeColor, float scale, float rotation, Vector2 origin, int maxChars = -1)
 		{
-			LayoutText(text, position, depth, Font.LineHeight, scale, color, strokeColor, EnableKerning, PositiveYIsDown, PositionByBaseline, rotation, origin, formatting, gameTime);
+			LayoutText(text, position, 1f, Font.LineHeight, scale, color, strokeColor, EnableKerning, PositiveYIsDown, PositionByBaseline, rotation, origin, false, null, maxChars);
 		}
 		/// <summary>
-		/// Perform layouting for a string so that the text can be rendered.
+		/// Perform layouting for a string, parsing formatting tags, so that the text can be rendered.
 		/// </summary>
+		/// <param name="gameTime">Used for animated text effects.</param>
 		/// <param name="text">Text to draw.</param>
 		/// <param name="position">Position to draw to.</param>
 		/// <param name="color">Color to draw text.</param>
+		/// <param name="strokeColor">Color to draw text outlines.</param>
 		/// <param name="scale">How large to draw the text.</param>
-		/// <param name="depth">Z coordinate to use for glyph vertices</param>
-		/// <param name="formatting">Whether to parse and apply formatting tags</param>
-		public void LayoutText(string text, Vector2 position, Color color, float scale = 16, float depth = 1f, bool formatting = false, GameTime gameTime = null)
+		/// <param name="maxChars">Stop after this many characters, not counting formatting tags.</param>
+		public void LayoutText(GameTime gameTime, string text, Vector2 position, Color color, Color strokeColor, float scale = 16, int maxChars = -1)
 		{
-			if (formatting)
-			{
-				LayoutText(text, position, depth, Font.LineHeight, scale, color, Color.Transparent, EnableKerning, PositiveYIsDown, PositionByBaseline, 0, Vector2.Zero, formatting, gameTime);
-			}
-			else
-			{
-				LayoutText(text, position, depth, Font.LineHeight, scale, color, Color.Transparent, EnableKerning, PositiveYIsDown, PositionByBaseline);
-			}
+			LayoutText(text, position, 1f, Font.LineHeight, scale, color, strokeColor, EnableKerning, PositiveYIsDown, PositionByBaseline, 0, Vector2.Zero, true, gameTime, maxChars);
 		}
 		/// <summary>
 		/// Perform layouting for a string so that the text can be rendered.
@@ -546,18 +552,10 @@ namespace BracketHouse.FontExtension
 		/// <param name="color">Color to draw text.</param>
 		/// <param name="strokeColor">Color to draw text outlines.</param>
 		/// <param name="scale">How large to draw the text.</param>
-		/// <param name="depth">Z coordinate to use for glyph vertices</param>
-		/// <param name="formatting">Whether to parse and apply formatting tags</param>
-		public void LayoutText(string text, Vector2 position, Color color, Color strokeColor, float scale = 16, float depth = 1f, bool formatting = false, GameTime gameTime = null)
+		/// <param name="maxChars">Stop after this many characters, not counting formatting tags.</param>
+		public void SimpleLayoutText(string text, Vector2 position, Color color, Color strokeColor, float scale = 16, int maxChars = -1)
 		{
-			if (formatting)
-			{
-				LayoutText(text, position, depth, Font.LineHeight, scale, color, strokeColor, EnableKerning, PositiveYIsDown, PositionByBaseline, 0, Vector2.Zero, formatting, gameTime);
-			}
-			else
-			{
-				LayoutText(text, position, depth, Font.LineHeight, scale, color, strokeColor, EnableKerning, PositiveYIsDown, PositionByBaseline);
-			}
+			SimpleLayoutText(text, position, 1f, Font.LineHeight, scale, color, strokeColor, EnableKerning, PositiveYIsDown, PositionByBaseline, maxChars);
 		}
 		/// <summary>
 		/// Render text with outline that has been layouted since last use of ResetLayout, overriding settings from TextRenderer.
