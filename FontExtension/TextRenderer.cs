@@ -33,38 +33,20 @@ namespace BracketHouse.FontExtension
 		private static Matrix Shared2DMatrix;
 		/// <summary>
 		/// Create <c>TextRenderer</c> for a given font, using the shader from the library.
+		/// Make sure to call <c>TextRenderer.Initialize</c> first.
 		/// </summary>
 		/// <param name="font"><c>FieldFont</c> that will be used by this renderer.</param>
 		/// <param name="device">Used for rendering.</param>
+		/// <param name="effect">Shader to use for text rendering. Will use shader provided by library if <c>null</c>.</param>
 		/// <param name="content">Used for loading the shader that will be used for text rendering.</param>
-		public TextRenderer(FieldFont font, GraphicsDevice device, ContentManager content)
+		/// <exception cref="InvalidOperationException">Occurs when <c>TextRenderer.Initialize</c> has not been called first.</exception>
+		public TextRenderer(FieldFont font, GraphicsDevice device, Effect effect = null)
 		{
 			if (!Initialized)
 			{
-				//Initialize(device);
 				throw new InvalidOperationException("Call TextRenderer.Initialize first.");
 			}
-			Effect = SharedEffect ??= LoadDefaultShader(content);
-			Font = font;
-			Device = device;
-			using (var stream = new MemoryStream(font.Bitmap))
-			{
-				AtlasTexture = Texture2D.FromStream(Device, stream);
-			}
-			UseScreenSpace = true;
-			EnableKerning = true;
-			OptimizeForTinyText = false;
-			PositiveYIsDown = true;
-			PositionByBaseline = false;
-		}
-		public TextRenderer(FieldFont font, GraphicsDevice device, Effect effect)
-		{
-			if (!Initialized)
-			{
-				//Initialize(device);
-				throw new InvalidOperationException("Call TextRenderer.Initialize first.");
-			}
-			Effect = effect;
+			Effect = effect ?? SharedEffect;
 			Font = font;
 			Device = device;
 			using (var stream = new MemoryStream(font.Bitmap))
@@ -117,9 +99,10 @@ namespace BracketHouse.FontExtension
 		/// </summary>
 		/// <param name="deviceMan"></param>
 		/// <param name="window"></param>
-		public static void Initialize(GraphicsDeviceManager deviceMan, GameWindow window)
+		public static void Initialize(GraphicsDeviceManager deviceMan, GameWindow window, ContentManager content)
 		{
 			Initialized = true;
+			SharedEffect = LoadDefaultShader(content);
 			// Update the shared 2D matrix every time resolution is changed.
 			window.ClientSizeChanged += (sender, e) =>
 			{ // ClientSizeChanged is only necessary in DesktopGL, as in WinDX PreparingDeviceSettings is raised when changing window size and is therefore enough.

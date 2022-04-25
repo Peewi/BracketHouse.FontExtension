@@ -41,7 +41,6 @@ namespace MonoMSDF
 
 		protected override void Initialize()
 		{
-			TextRenderer.Initialize(graphics, Window);
 			base.Initialize();
 			frameWatch = new Stopwatch();
 		}
@@ -51,11 +50,12 @@ namespace MonoMSDF
 			graphics.PreferredBackBufferWidth = 1280;
 			graphics.PreferredBackBufferHeight = 720;
 			graphics.ApplyChanges();
+			TextRenderer.Initialize(graphics, Window, Content);
 			mainFont = this.Content.Load<FieldFont>("arial");
 			segoescriptFont = this.Content.Load<FieldFont>("segoescript");
 
-			this.textRenderer = new TextRenderer(mainFont, GraphicsDevice, Content);
-			this.segoescriptRenderer = new TextRenderer(segoescriptFont, GraphicsDevice, Content);
+			this.textRenderer = new TextRenderer(mainFont, GraphicsDevice);
+			this.segoescriptRenderer = new TextRenderer(segoescriptFont, GraphicsDevice);
 			this.GraphicsDevice.BlendState = BlendState.AlphaBlend;
 			this.GraphicsDevice.DepthStencilState = DepthStencilState.None;
 			this.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
