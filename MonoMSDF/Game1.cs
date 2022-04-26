@@ -115,12 +115,12 @@ namespace MonoMSDF
 			this.textRenderer.ResetLayout();
 			this.textRenderer.SimpleLayoutText($"Frame time: {frameTicks} ticks\nFrame time: {frameTime}ms\nPeak time: {peakTicks} ticks", new Vector2(0, 720 - 265), Color.Gold, Color.Black, 64);
 			this.textRenderer.SimpleLayoutText($"Running for {gameTime.TotalGameTime.TotalSeconds} seconds", new Vector2(0, 720 - 40), Color.Gold, Color.Black, 32);
-			string formatDemo1 = $"[\u200Bstroke white][\u200B#ff0000]Red[\u200Bfill 0 128 0]Green[\u200Bblue]Blue\nBecomes\n[stroke white][#ff0000]Red[fill 0 128 0]Green[blue]Blue";
+			string formatDemo1 = $"[\u200Bstroke white][\u200Bfill #ff0000]Red[\u200Bfill 0 128 0]Green[\u200Bblue]Blue\nBecomes\n[stroke white][fill #ff0000]Red-[fill 0 128 0]Green-[blue]Blue";
 			string formatDemo2 = $"[\u200Bscale 4][\u200Brainbow][\u200Bsine]RAINBOW\nBecomes\n\n\n[scale 4][rainbow][sine]RAINBOW";
 			string formatDemo3 = $"Text can include icons\n(although this one is pure white):\nPress the [\u200bpixel] button!\nBecomes\nPress the [pixel] button!";
-			textRenderer.LayoutText(gameTime, formatDemo1, new Vector2(20, 20), Color.White, Color.Black, 32, maxChars);
+			textRenderer.LayoutText(gameTime, formatDemo1, new Vector2(20, 20), Color.White, Color.Black, 32);
 			textRenderer.LayoutText(gameTime, formatDemo2, new Vector2(300, 150), Color.White, Color.Black, 32);
-			textRenderer.LayoutText(gameTime, formatDemo3, new Vector2(800, 20), Color.White, Color.Black, 32);
+			textRenderer.LayoutText(gameTime, formatDemo3, new Vector2(800, 450), Color.White, Color.Black, 32);
 			//this.textRenderer.RenderStroke();
 			//this.textRenderer.RenderText();
 			textRenderer.RenderStrokedText();
