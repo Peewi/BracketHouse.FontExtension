@@ -303,11 +303,11 @@ namespace BracketHouse.FontExtension
 			{
 				return (end.Invoke(args), tagType, tagArgs, tagStringLength);
 			}
-			Color? colorAttempt = FormattingFunctions.ColorFunction(gameTime, fillColor, args);
-			if (colorAttempt is Color clr)
-			{
-				return (clr, TagType.FillColor, tagArgs, tagStringLength);
-			}
+			//Color? colorAttempt = FormattingFunctions.ColorFunction(gameTime, fillColor, args);
+			//if (colorAttempt is Color clr)
+			//{
+			//	return (clr, TagType.FillColor, tagArgs, tagStringLength);
+			//}
 			return (null, TagType.Unknown, null, tagStringLength);
 		}
 		/// <summary>
@@ -361,7 +361,7 @@ namespace BracketHouse.FontExtension
 			{
 				return (FillTags["fill"], TagType.FillColor, tagArgs, tagStringLength);
 			}
-			return (null, TagType.Unknown, tagArgs, tagStringLength);
+			return (null, TagType.Unknown, tagArgs, 0);
 		}
 	}
 }
