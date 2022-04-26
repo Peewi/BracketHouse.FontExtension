@@ -5,7 +5,12 @@
 		<OutputType>Library</OutputType>
 		<StartupObject />
 		<VersionPrefix>2.0.0</VersionPrefix>
-		<VersionSuffix>dev</VersionSuffix>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageProjectUrl>https://github.com/Peewi/BracketHouse.FontExtension</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/Peewi/BracketHouse.FontExtension</RepositoryUrl>
+		<PackageTags>Monogame, font, text</PackageTags>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	</PropertyGroup>
 	<ItemGroup>
 	  <None Remove="FieldFontEffectDesktopGL.xnb" />
@@ -14,6 +19,12 @@
 	<ItemGroup>
 	  <EmbeddedResource Include="FieldFontEffectDesktopGL.xnb" />
 	  <EmbeddedResource Include="FieldFontEffectWinDX.xnb" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Include="..\README.md">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
 	</ItemGroup>
 
 	<ItemGroup>
