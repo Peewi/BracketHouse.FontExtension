@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -30,6 +31,7 @@ namespace BracketHouse.FontExtension
 			Kerning = 128,
 			Special = 256,
 			EndFormat = 512,
+			Sprite = 1024,
 		}
 		/// <summary>
 		/// Delegate to use for adding fill color formatting tags
@@ -91,11 +93,17 @@ namespace BracketHouse.FontExtension
 		/// <param name="gameTime">A gametime object. Useful for animated effects.</param>
 		/// <param name="charNum">The index of the letter about to be rendered, ignoring formatting tags.</param>
 		/// <param name="position">Position of the current character in the rendered text.</param>
-		/// <param name="currentChar">Char for the glyph that is about to be rendered</param>
 		/// <param name="fillColor">The fill color passed to <c>TextRenderer.LayoutText</c></param>
 		/// <param name="strokeColor">The stroke color passed to <c>TextRenderer.LayoutText</c></param>
 		/// <param name="args">Array of argument strings. Note that the first element will be the name of the command.</param>
-		public delegate void SpecialDelegate(GameTime gameTime, int charNum, Vector2 position, char currentChar, Color fillColor, Color strokeColor, string[] args);
+		public delegate void SpecialDelegate(GameTime gameTime, int charNum, Vector2 position, Color fillColor, Color strokeColor, string[] args);
+		/// <summary>
+		/// Delegate for drawing a sprite in text.
+		/// </summary>
+		/// <param name="gameTime">A gametime object. Useful for animated effects.</param>
+		/// <param name="args">Array of argument strings. Note that the first element will be the name of the command.</param>
+		/// <returns>Texture for sprite, source rectangle, and how wide to draw sprite in text.</returns>
+		public delegate (Texture2D texture, Rectangle srcRect, float width) SpriteDelegate(GameTime gameTime, string[] args);
 		/// <summary>
 		/// Delegate for tag that resets the effects of other tags.
 		/// </summary>
@@ -114,6 +122,7 @@ namespace BracketHouse.FontExtension
 		static readonly Dictionary<string, LineHeightDelegate> LineHeightTags = new Dictionary<string, LineHeightDelegate>();
 		static readonly Dictionary<string, KerningDelegate> KerningTags = new Dictionary<string, KerningDelegate>();
 		static readonly Dictionary<string, SpecialDelegate> SpecialTags = new Dictionary<string, SpecialDelegate>();
+		static readonly Dictionary<string, SpriteDelegate> SpriteTags = new Dictionary<string, SpriteDelegate>();
 		static readonly Dictionary<string, EndFormatDelegate> EndTags = new Dictionary<string, EndFormatDelegate>();
 		static readonly Dictionary<string, string[]> TagArgsCache = new Dictionary<string, string[]>();
 
@@ -205,6 +214,16 @@ namespace BracketHouse.FontExtension
 			KerningTags[name.ToLowerInvariant()] = kerningFunction;
 		}
 		/// <summary>
+		/// Add a new sprite tag.
+		/// </summary>
+		/// <param name="name">Name to use for tag. Case insensitive.</param>
+		/// <param name="spriteFunction">Sprite function</param>
+		public static void RegisterTag(string name, SpriteDelegate spriteFunction)
+		{
+			TagNames[name.ToLowerInvariant()] = TagType.Sprite;
+			SpriteTags[name.ToLowerInvariant()] = spriteFunction;
+		}
+		/// <summary>
 		/// Add a new special tag.
 		/// </summary>
 		/// <param name="name">Name to use for tag. Case insensitive.</param>
@@ -276,6 +295,10 @@ namespace BracketHouse.FontExtension
 			{
 				return (special, tagType, tagArgs, tagStringLength);
 			}
+			if (tagDelegate is SpriteDelegate sprite)
+			{
+				return (sprite.Invoke(gameTime, args), tagType, tagArgs, tagStringLength);
+			}
 			if (tagDelegate is EndFormatDelegate end)
 			{
 				return (end.Invoke(args), tagType, tagArgs, tagStringLength);
@@ -328,6 +351,7 @@ namespace BracketHouse.FontExtension
 					TagType.Scale => (ScaleTags[tagArgs[0]], tagType, tagArgs, tagStringLength),
 					TagType.LineHeight => (LineHeightTags[tagArgs[0]], tagType, tagArgs, tagStringLength),
 					TagType.Kerning => (KerningTags[tagArgs[0]], tagType, tagArgs, tagStringLength),
+					TagType.Sprite => (SpriteTags[tagArgs[0]], tagType, tagArgs, tagStringLength),
 					TagType.Special => (SpecialTags[tagArgs[0]], tagType, tagArgs, tagStringLength),
 					TagType.EndFormat => (EndTags[tagArgs[0]], tagType, tagArgs, tagStringLength),
 					_ => (null, TagType.Unknown, null, tagStringLength),

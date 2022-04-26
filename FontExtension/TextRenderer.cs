@@ -27,6 +27,7 @@ namespace BracketHouse.FontExtension
 		private FontVertex[] LayoutVertices = new FontVertex[100 * 4];
 		private int[] LayoutIndices = new int[100 * 6];
 		private int GlyphsLayouted = 0;
+		private List<(Texture2D texture, Rectangle srcRect, Rectangle destRect, float rot)> Sprites = new List<(Texture2D texture, Rectangle srcRect, Rectangle destRect, float rot)>();
 
 		private static bool Initialized = false;
 		private static Effect SharedEffect;
@@ -179,6 +180,7 @@ namespace BracketHouse.FontExtension
 		public void ResetLayout()
 		{
 			GlyphsLayouted = 0;
+			Sprites.Clear();
 		}
 		/// <summary>
 		/// Perform layouting with rotation for a string so that the text can be rendered.
@@ -280,7 +282,24 @@ namespace BracketHouse.FontExtension
 						case Formatting.TagType.Kerning:
 							currentKerning = (bool)returnValue;
 							break;
+						case Formatting.TagType.Sprite:
+							var (texture, srcRect, width) = ((Texture2D texture, Rectangle srcRect, float width))returnValue;
+							int destWidth = (int)(width * currentScale);
+							int destHeight;
+							if (srcRect == null)
+							{
+								destHeight = (int)((float)texture.Height / texture.Width * width * currentScale);
+							}
+							else
+							{
+								destHeight = (int)((float)srcRect.Height / srcRect.Width * width * currentScale);
+							}
+							Rectangle dest = new Rectangle((int)cursor.X, (int)cursor.Y - destHeight, destWidth, destHeight);
+							Sprites.Add((texture, srcRect, dest, rotation));
+							cursor += advanceDir * width * currentScale;
+							break;
 						case Formatting.TagType.Special:
+							((Formatting.SpecialDelegate)returnValue).Invoke(gameTime, i, cursor, currentFill, currentStroke, args);
 							break;
 						case Formatting.TagType.EndFormat:
 							Formatting.TagType Ends = (Formatting.TagType)returnValue;
@@ -323,7 +342,7 @@ namespace BracketHouse.FontExtension
 					Vector2 letterOffset = Vector2.Zero;
 					if (currentLetterDelegate != null)
 					{
-						letterOffset = currentLetterDelegate.Invoke(gameTime, i, cursor / currentScale, text[i], currentLetterArgs);
+						letterOffset = currentLetterDelegate.Invoke(gameTime, i, (cursor - cursorStart) / currentScale, text[i], currentLetterArgs);
 					}
 					Vector2 rotLeft = advanceDir * current.PlaneLeft * currentScale;
 					Vector2 rotRight = advanceDir * current.PlaneRight * currentScale;
@@ -703,6 +722,20 @@ namespace BracketHouse.FontExtension
 			}
 			LayoutVertices = newVerts;
 			LayoutIndices = newIndices;
+		}
+		/// <summary>
+		/// Draw sprites from sprite tags.
+		/// </summary>
+		/// <param name="batch">Used to draw sprites.</param>
+		public void DrawSprites(SpriteBatch batch)
+		{
+			foreach ((Texture2D texture, Rectangle srcRect, Rectangle destRect, float rot) in Sprites)
+			{
+				Vector2 origin = new Vector2(0, srcRect.Height);
+				Rectangle realDest = destRect;
+				realDest.Y += realDest.Height;
+				batch.Draw(texture, realDest, srcRect, Color.White, rot, origin, SpriteEffects.None, 0);
+			}
 		}
 	}
 }
