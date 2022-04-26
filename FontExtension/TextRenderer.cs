@@ -10,6 +10,9 @@ using MonoGame.Framework.Utilities;
 
 namespace BracketHouse.FontExtension
 {
+	/// <summary>
+	/// Uses multi-channel signed distance fields to draw some nice looking text.
+	/// </summary>
 	public sealed class TextRenderer
 	{
 		private const string LargeTextTechnique = "LargeText";
@@ -39,7 +42,6 @@ namespace BracketHouse.FontExtension
 		/// <param name="font"><c>FieldFont</c> that will be used by this renderer.</param>
 		/// <param name="device">Used for rendering.</param>
 		/// <param name="effect">Shader to use for text rendering. Will use shader provided by library if <c>null</c>.</param>
-		/// <param name="content">Used for loading the shader that will be used for text rendering.</param>
 		/// <exception cref="InvalidOperationException">Occurs when <c>TextRenderer.Initialize</c> has not been called first.</exception>
 		public TextRenderer(FieldFont font, GraphicsDevice device, Effect effect = null)
 		{
@@ -96,10 +98,11 @@ namespace BracketHouse.FontExtension
 			return retval;
 		}
 		/// <summary>
-		/// Make sure <c>Shared2DMatrix</c> is kept updated.
+		/// Load and prepare some stuff that will be shared across instances of <c>TextRenderer</c>.
 		/// </summary>
 		/// <param name="deviceMan"></param>
 		/// <param name="window"></param>
+		/// <param name="content"></param>
 		public static void Initialize(GraphicsDeviceManager deviceMan, GameWindow window, ContentManager content)
 		{
 			Initialized = true;
@@ -419,6 +422,7 @@ namespace BracketHouse.FontExtension
 		/// <param name="kerning">Override <c>EnableKerning</c> property.</param>
 		/// <param name="yIsDown">Override <c>PositiveYIsDown</c> property.</param>
 		/// <param name="positionByBaseline">Override <c>PositionByBaseline</c> property.</param>
+		/// <param name="maxChars">Stop after layouting this many characters.</param>
 		void SimpleLayoutText(string text, Vector2 position, float depth, float lineHeight, float scale, Color color, Color strokeColor, bool kerning, bool yIsDown, bool positionByBaseline, int maxChars)
 		{
 			if (string.IsNullOrEmpty(text))
@@ -526,6 +530,7 @@ namespace BracketHouse.FontExtension
 		/// <param name="text">Text to draw.</param>
 		/// <param name="position">Position to draw to.</param>
 		/// <param name="color">Color to draw text.</param>
+		/// <param name="strokeColor">Color to draw text outlines.</param>
 		/// <param name="scale">How large to draw the text.</param>
 		/// <param name="rotation">Amount of rotation in radians</param>
 		/// <param name="origin">Point to rotate around, relative to position</param>

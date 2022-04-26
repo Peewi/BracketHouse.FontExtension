@@ -6,11 +6,12 @@ using System.Text;
 
 namespace BracketHouse.FontExtension
 {
+
+	/// <summary>
+	/// Keeps track of formatting tags. Use <c>RegisterTag</c> and the delegates to add your own tags.
+	/// </summary>
 	public static class Formatting
 	{
-		/// <summary>
-		/// Contains methods used for text formatting.
-		/// </summary>
 		[Flags]
 		internal enum TagType
 		{
