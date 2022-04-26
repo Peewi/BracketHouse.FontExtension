@@ -39,6 +39,7 @@ The types of tag are:
 * `Scale`
 * `LineHeight`
 * `Kerning`
+* `Sprite`. Used to draw sprites/icons in text. Inserts a gap in the text around the icon. No sprites or sprite tags are included in the library, but [MonoMSDF/Game1.cs](MonoMSDF/Game1.cs) does show an example of adding and using a sprite tag.
 * `Special`. Special tags do not have any direct effect on the text formatting, but can be used to run arbitrary code when layouting text. There are currently no special tags.
 
 Adding your own tags is easy. Simply create a method that matches one of the delegates in `Formatting` and call `Formatting.RegisterTag`. Example: `RegisterTag("color", fillFunction: FormattingFunctions.ColorFunction)`. Note that some of the delegates have identical signatures, so you may be required to explicitly provide the paremeter name.
